@@ -60,3 +60,7 @@ body[scroll]::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 0, 0, .5);
 }
+
+.mb-10 {
+  margin-bottom: 10px;
+}

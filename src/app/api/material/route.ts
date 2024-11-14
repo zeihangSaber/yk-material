@@ -5,11 +5,11 @@ export const revalidate = 10
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
-  const tags = searchParams.get('tags')?.split(',')
+  const tags = searchParams.get('tags')?.split(',') as string[]
   const mongo = await connectMongo()
   const Material = mongo.models.Material || mongo.model('Material', MaterialSchema)
   let materials = []
-  if (tags) {
+  if (tags[0]) {
     materials = await Material.find({ tags: { $in: tags } })
   } else {
     materials = await Material.find()
