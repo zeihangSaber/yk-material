@@ -1,95 +1,76 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+
+import { Image, Checkbox, Space, Card } from 'antd'
+import { useEffect, useState } from 'react'
+import './page.css'
+
+const { Meta } = Card
+const fallback = '/fallback.png'
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [myTags, setTags] = useState<string[]>([])
+  const [myMaterials, setMaterials] = useState<
+    {
+      title: string
+      _id: string
+      imgUrl: string
+      tags: string[]
+    }[]
+  >([])
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const fetchMaterial = async () => {
+    const res = await fetch(`/api/material?tags=${myTags.join(',')}`)
+    const { materials } = await res.json()
+    setMaterials(materials)
+  }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch(`/api/tags`)
+      const { tags } = await res.json()
+      setTags(tags)
+      console.log('🚀 ~ fetchData ~ res:', tags)
+    }
+    fetchData()
+    fetchMaterial()
+  }, [])
+
+  const onChange = (val: string[]) => {
+    setTags(val)
+    fetchMaterial()
+  }
+
+  return (
+    <div className="layout">
+      <div className="left">
+        <Checkbox.Group onChange={onChange}>
+          <Space style={{ width: '100%' }} direction="vertical">
+            {myTags.map((tag) => {
+              return (
+                <Checkbox key={tag} value={tag}>
+                  {tag}
+                </Checkbox>
+              )
+            })}
+          </Space>
+        </Checkbox.Group>
+      </div>
+      <div className="right">
+        <Space size={[30, 20]} wrap>
+          {myMaterials.map((item) => {
+            return (
+              <Card
+                key={item._id}
+                hoverable
+                style={{ width: 240, height: 300 }}
+                cover={<Image alt="" fallback={fallback} src={item.imgUrl} />}
+              >
+                <Meta description={item.title} />
+              </Card>
+            )
+          })}
+        </Space>
+      </div>
     </div>
-  );
+  )
 }
