@@ -4,6 +4,7 @@
 import { Button, Card, Input, Space, Tag, message, Upload, Select } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import type { GetProp, UploadProps, InputRef } from 'antd'
+import './settings.css'
 
 type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0]
 
@@ -11,6 +12,7 @@ export default function Settings() {
   const input = useRef<InputRef>(null)
   const title = useRef<InputRef>(null)
   const [myTags, setTags] = useState<string[]>([])
+  const [myMaterials, setMaterials] = useState<{ _id: string; title: string }[]>([])
   const [selTags, setSelTags] = useState<string[]>([])
   // const [loading, setLoading] = useState(false)
   const [imageUrl, setImageUrl] = useState<string>()
@@ -32,6 +34,12 @@ export default function Settings() {
     setSelTags(val)
   }
 
+  const fetchMaterial = async (selTags: string[] = []) => {
+    const res = await fetch(`/api/material?tags=${selTags.join(',')}`)
+    const { materials } = await res.json()
+    setMaterials(materials)
+  }
+
   const submit = async () => {
     const titleVal = title.current?.input?.value
 
@@ -48,11 +56,12 @@ export default function Settings() {
       method: 'POST',
       body: JSON.stringify({ data: { title: titleVal, tags: selTags, imgUrl: imageUrl } }),
     })
-    const { error } = await res.json()
+    const { error, materials } = await res.json()
     if (error) {
       message.error(error)
       return
     }
+    setMaterials(materials)
     message.success('创建成功')
     setSelTags([])
     setImageUrl('')
@@ -83,6 +92,7 @@ export default function Settings() {
       const { tags } = await res.json()
       setTags(tags)
     }
+    fetchMaterial()
     fetchData()
   }, [])
 
@@ -101,13 +111,43 @@ export default function Settings() {
     setTags(tags)
   }
 
+  const delTag = async (name: string) => {
+    const res = await fetch(`/api/material`, {
+      method: 'DELETE',
+      body: JSON.stringify({ name }),
+    })
+    const { materials, error } = await res.json()
+    if (error) {
+      message.error(error)
+      return
+    }
+    setMaterials(materials)
+  }
+
+  const delFn = async (_id: string) => {
+    const res = await fetch(`/api/material`, {
+      method: 'DELETE',
+      body: JSON.stringify({ _id }),
+    })
+    const { materials, error } = await res.json()
+    if (error) {
+      message.error(error)
+      return
+    }
+    setMaterials(materials)
+  }
+
   return (
     <div style={{ backgroundColor: 'rgb(240, 242, 245)', height: '100%', padding: 40 }}>
       <Space direction="vertical" size="middle" style={{ display: 'flex' }}>
         <Card title="标签">
           <Space style={{ marginBottom: 10 }}>
             {myTags.map((tag) => {
-              return <Tag key={tag}>{tag}</Tag>
+              return (
+                <Tag closeIcon onClick={() => delTag(tag)} key={tag}>
+                  {tag}
+                </Tag>
+              )
             })}
           </Space>
 
@@ -147,6 +187,19 @@ export default function Settings() {
             <Button onClick={submit} color="primary" variant="solid">
               创建素材
             </Button>
+          </Space>
+        </Card>
+
+        <Card title="删除素材">
+          <Space style={{ width: '100%' }} direction="vertical">
+            {myMaterials.map((item) => {
+              return (
+                <div className="delBox" onClick={() => delFn(item._id)} key={item._id}>
+                  <span>{item.title}</span>
+                  <Button type="primary">删除</Button>
+                </div>
+              )
+            })}
           </Space>
         </Card>
       </Space>

@@ -1,0 +1,4 @@
+.delBox {
+  display: flex;
+  justify-content: space-between;
+}
